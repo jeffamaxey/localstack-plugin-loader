@@ -10,7 +10,7 @@ class DummyPlugin(Plugin):
 
     def __init__(self) -> None:
         super().__init__()
-        self.load_calls = list()
+        self.load_calls = []
 
     def load(self, *args, **kwargs):
         self.load_calls.append((args, kwargs))

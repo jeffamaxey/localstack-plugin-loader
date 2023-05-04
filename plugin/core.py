@@ -13,7 +13,7 @@ class PluginException(Exception):
 
 class PluginDisabled(PluginException):
     def __init__(self, namespace: str, name: str):
-        super(PluginDisabled, self).__init__("plugin %s:%s is disabled" % (namespace, name))
+        super(PluginDisabled, self).__init__(f"plugin {namespace}:{name} is disabled")
         self.namespace = namespace
         self.name = name
 
@@ -77,7 +77,7 @@ class PluginSpec:
         self.factory = factory
 
     def __str__(self):
-        return "PluginSpec(%s.%s = %s)" % (self.namespace, self.name, self.factory)
+        return f"PluginSpec({self.namespace}.{self.name} = {self.factory})"
 
     def __repr__(self):
         return self.__str__()
@@ -114,9 +114,8 @@ class PluginSpecResolver:
         if isinstance(source, PluginSpec):
             return source
 
-        if inspect.isclass(source):
-            if issubclass(source, Plugin):
-                return PluginSpec(source.namespace, source.name, source)
+        if inspect.isclass(source) and issubclass(source, Plugin):
+            return PluginSpec(source.namespace, source.name, source)
 
         if inspect.isfunction(source):
             spec = getattr(source, "__pluginspec__", None)
@@ -125,7 +124,7 @@ class PluginSpecResolver:
 
         # TODO: add more options to specify plugin specs
 
-        raise ValueError("cannot resolve plugin specification from %s" % source)
+        raise ValueError(f"cannot resolve plugin specification from {source}")
 
 
 class PluginLifecycleListener:  # pragma: no cover

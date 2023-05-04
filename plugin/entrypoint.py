@@ -31,9 +31,9 @@ def to_entry_point_dict(eps: List[EntryPoint]) -> EntryPointDict:
 
     for ep in eps:
         if ep.name in names[ep.group]:
-            raise ValueError("Duplicate entry point %s %s" % (ep.group, ep.name))
+            raise ValueError(f"Duplicate entry point {ep.group} {ep.name}")
 
-        result[ep.group].append("%s=%s" % (ep.name, ep.value))
+        result[ep.group].append(f"{ep.name}={ep.value}")
         names[ep.group].add(ep.name)
 
     return result

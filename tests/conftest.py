@@ -6,5 +6,4 @@ from tests.plugins import sample_plugins
 
 @pytest.fixture
 def sample_plugin_finder():
-    finder = ModuleScanningPluginFinder(modules=[sample_plugins])
-    yield finder
+    yield ModuleScanningPluginFinder(modules=[sample_plugins])

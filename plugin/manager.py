@@ -144,8 +144,8 @@ class PluginManager(PluginLifecycleNotifierMixin, Generic[P]):
     ):
         self.namespace = namespace
 
-        self.load_args = load_args or list()
-        self.load_kwargs = load_kwargs or dict()
+        self.load_args = load_args or []
+        self.load_kwargs = load_kwargs or {}
 
         self.listener = listener or PluginLifecycleListener()
         self.finder = finder or StevedorePluginFinder(
@@ -185,7 +185,7 @@ class PluginManager(PluginLifecycleNotifierMixin, Generic[P]):
         Attempts to load all plugins found in the namespace, and returns those that were loaded successfully. If
         propagate_exception is set to True, then the method will re-raise any errors as soon as it encouters them.
         """
-        plugins = list()
+        plugins = []
 
         for name, container in self._plugins.items():
             if container.is_loaded:
@@ -234,7 +234,7 @@ class PluginManager(PluginLifecycleNotifierMixin, Generic[P]):
 
     def _require_plugin(self, name: str) -> PluginContainer[P]:
         if name not in self._plugins:
-            raise ValueError("no plugin named %s in namespace %s" % (name, self.namespace))
+            raise ValueError(f"no plugin named {name} in namespace {self.namespace}")
 
         return self._plugins[name]
 
@@ -283,9 +283,7 @@ class PluginManager(PluginLifecycleNotifierMixin, Generic[P]):
     def _plugin_from_spec(self, plugin_spec: PluginSpec) -> P:
         factory = plugin_spec.factory
 
-        # functional decorators can overwrite the spec factory (pointing to the decorator) with a custom factory
-        spec = getattr(factory, "__pluginspec__", None)
-        if spec:
+        if spec := getattr(factory, "__pluginspec__", None):
             factory = spec.factory
 
         return factory()

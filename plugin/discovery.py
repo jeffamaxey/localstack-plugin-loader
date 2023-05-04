@@ -22,7 +22,7 @@ class ModuleScanningPluginFinder(PluginFinder):
         self.resolver = resolver or PluginSpecResolver()
 
     def find_plugins(self) -> List[PluginSpec]:
-        plugins = list()
+        plugins = []
 
         for module in self.modules:
             LOG.debug("scanning module %s", module.__name__)
@@ -76,6 +76,6 @@ class PackagePathPluginFinder(PluginFinder):
             pkgpath = self.where + os.sep + pkg.replace(".", os.sep)
             for info in iter_modules([pkgpath]):
                 if not info.ispkg:
-                    modules.add(pkg + "." + info.name)
+                    modules.add(f"{pkg}.{info.name}")
 
         return modules

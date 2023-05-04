@@ -61,40 +61,34 @@ def entry_points_from_egg_info(egg_info_dir: str) -> EntryPointDict:
 
 def _has_entry_points_cache() -> bool:
     egg_info_dir = _get_egg_info_dir()
-    if not egg_info_dir:
-        return False
-
-    if not os.path.isfile(os.path.join(egg_info_dir, "entry_points.txt")):
-        return False
-
-    return True
+    return (
+        bool(os.path.isfile(os.path.join(egg_info_dir, "entry_points.txt")))
+        if egg_info_dir
+        else False
+    )
 
 
 def _should_read_existing_egg_info() -> Tuple[bool, Optional[str]]:
     # we want to read the .egg-info dir only if it exists, and if we are creating the egg_info or installing it with
     # pip install -e (which calls 'setup.py develop')
 
-    if not (_is_pip_build_context() or _is_local_build_context()):
+    if not _is_pip_build_context() and not _is_local_build_context():
         return False, None
 
-    egg_info_dir = _get_egg_info_dir()
-    if not egg_info_dir:
+    if egg_info_dir := _get_egg_info_dir():
+        return (
+            (True, egg_info_dir)
+            if os.path.isfile(os.path.join(egg_info_dir, "entry_points.txt"))
+            else (False, None)
+        )
+    else:
         return False, None
-
-    if not os.path.isfile(os.path.join(egg_info_dir, "entry_points.txt")):
-        return False, None
-
-    return True, egg_info_dir
 
 
 def _is_pip_build_context():
-    # when pip builds packages or wheels from source distributions, it creates a temporary directory with a marker
-    # file that we can use to determine whether we are in such a build context.
-    for f in os.listdir(os.getcwd()):
-        if f == "pip-delete-this-directory.txt":
-            return True
-
-    return False
+    return any(
+        f == "pip-delete-this-directory.txt" for f in os.listdir(os.getcwd())
+    )
 
 
 def _is_local_build_context():
@@ -110,10 +104,7 @@ def _is_local_build_context():
 
     # it's unfortunately not really distinguishable whether or not a user calls `python setup.py develop` in the
     # project, or calls `pip install -e ..` to install the project from somewhere else.
-    if len(sys.argv) > 1 and sys.argv[1] in ["egg_info", "develop"]:
-        return True
-
-    return False
+    return len(sys.argv) > 1 and sys.argv[1] in ["egg_info", "develop"]
 
 
 def _get_egg_info_dir() -> Optional[str]:
@@ -121,11 +112,14 @@ def _get_egg_info_dir() -> Optional[str]:
     Heuristic to find the .egg-info dir of the current build context.
     """
     cwd = os.getcwd()
-    for d in os.listdir(cwd):
-        if d.endswith(".egg-info"):
-            return os.path.join(cwd, d)
-
-    return None
+    return next(
+        (
+            os.path.join(cwd, d)
+            for d in os.listdir(cwd)
+            if d.endswith(".egg-info")
+        ),
+        None,
+    )
 
 
 def _get_dist(egg_info_dir: str):
